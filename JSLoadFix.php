@@ -57,7 +57,7 @@ class JSLoadFix extends Extension
         $failsafe = intval($this->config('failsafe_ms', 1000));
         $bodyScript = $this->getBodyScript($failsafe);
 
-        // ...and shove this cursed cookie logic straight into <body>
+        // ...We dont talk abt this....
         Event::listen('body', function () use ($bodyScript) {
             return ['view' => new HtmlString($bodyScript)];
         });
@@ -66,7 +66,7 @@ class JSLoadFix extends Extension
     private function getBodyScript(int $failsafe): string
     {
         return <<<HTML
-<!-- Obscure cookie reloading logic pulled straight out of hell (JSLoadFix) -->
+<!-- Obscure cookie reloading logic pulled straight out of hell -->
 <script>
 (function() {
     const lastReload = sessionStorage.getItem("jsReloadFixTime");
