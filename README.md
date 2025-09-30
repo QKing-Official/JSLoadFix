@@ -10,7 +10,7 @@ The **JS Load Fix** extension helps your site or application prevent unwanted pa
 ---
 
 ## Why Use This Extension?
-Avoid disruptive reload loops that frustrate users. This extension ensures scripts like Tawk.to or other custom JS widgets load properly, even when users navigate between pages or use Single Page Applications (SPAs). It's simple, safe, and configurable for any web environment.
+Avoid disruptive reload loops that frustrate users. This extension ensures scripts like Tawk.to or other custom JS widgets load properly, even when users navigate between pages. It's simple, safe, and configurable for any web environment.
 
 ---
 
