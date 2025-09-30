@@ -74,8 +74,6 @@ class JSLoadFix extends Extension
 
     if (!lastReload || (now - parseInt(lastReload)) > {$failsafe}) {
         sessionStorage.setItem("jsReloadFixTime", now);
-
-        // tiny delay to ensure sessionStorage is written
         setTimeout(() => {
             location.reload();
         }, 50);
