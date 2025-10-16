@@ -9,7 +9,7 @@ use Illuminate\Support\HtmlString;
 #[ExtensionMeta(
     name: 'JSLoadFix',
     description: 'Fixes JS loading logic so other scripts can load properly, using a timed reload guard.',
-    version: '1.3',
+    version: '1.1',
     author: 'QKingsoftware'
 )]
 class JSLoadFix extends Extension
