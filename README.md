@@ -2,6 +2,13 @@
 
 **Prevents infinite reload loops and ensures JS scripts load properly using a configurable session guard.**
 
+## Special thanks
+This project is open-source and maintained by the community.
+Contributors:
+QKing (Initial Commit)
+Corwin (Creator and Maintainer of Paymenter)
+[Corpse](https://builtbybit.com/members/msi.629144) (Updated the v1.0 code to release version 1.1)
+
 ---
 
 ## Overview
