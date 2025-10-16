@@ -8,8 +8,8 @@ use Illuminate\Support\HtmlString;
 
 #[ExtensionMeta(
     name: 'JSLoadFix',
-    description: 'Fixes JS loading logic so other scripts can load without having to refresh using a cookie/session guard.',
-    version: '1.0',
+    description: 'Fixes JS loading logic so other scripts can load properly, using a timed reload guard.',
+    version: '1.3',
     author: 'QKingsoftware'
 )]
 class JSLoadFix extends Extension
@@ -21,12 +21,12 @@ class JSLoadFix extends Extension
 
     public function getDescription(): string
     {
-        return 'Fixes JS not loading when navigation is used.';
+        return 'Prevents broken JS by triggering a controlled reload when needed, with a per-page session guard.';
     }
 
     public function getVersion(): string
     {
-        return '1.0';
+        return '1.3';
     }
 
     public function getAuthor(): string
@@ -41,9 +41,17 @@ class JSLoadFix extends Extension
                 'name' => 'failsafe_ms',
                 'type' => 'number',
                 'label' => 'Failsafe Time (ms)',
-                'description' => 'Minimum time in milliseconds before reload can happen again. Default: 1000.',
+                'description' => 'Minimum delay before reload can happen again. Default: 1000 ms.',
                 'required' => true,
                 'value' => $values['failsafe_ms'] ?? 1000,
+            ],
+            [
+                'name' => 'paths',
+                'type' => 'text',
+                'label' => 'Apply to Pages (comma-separated)',
+                'description' => 'List URL path fragments to apply this fix on (e.g. /clientarea, /dashboard). Leave blank for all pages.',
+                'required' => false,
+                'value' => $values['paths'] ?? '',
             ],
         ];
     }
@@ -54,10 +62,25 @@ class JSLoadFix extends Extension
             return;
         }
 
+        $paths = array_filter(array_map('trim', explode(',', (string)$this->config('paths', ''))));
+        $currentPath = '/' . ltrim(request()->path(), '/');
+
+        if (!empty($paths)) {
+            $shouldApply = false;
+            foreach ($paths as $p) {
+                if (stripos($currentPath, $p) !== false) {
+                    $shouldApply = true;
+                    break;
+                }
+            }
+            if (!$shouldApply) {
+                return;
+            }
+        }
+
         $failsafe = intval($this->config('failsafe_ms', 1000));
         $bodyScript = $this->getBodyScript($failsafe);
 
-        // ...We dont talk abt this....
         Event::listen('body', function () use ($bodyScript) {
             return ['view' => new HtmlString($bodyScript)];
         });
@@ -65,18 +88,30 @@ class JSLoadFix extends Extension
 
     private function getBodyScript(int $failsafe): string
     {
+        $expiry = 30 * 1000;
+
         return <<<HTML
-<!-- Obscure cookie reloading logic pulled straight out of hell -->
 <script>
 (function() {
-    const lastReload = sessionStorage.getItem("jsReloadFixTime");
+    const path = location.pathname || "default";
+    const keyBase = "jsReloadFix_";
+    const timeKey = keyBase + path + "_time";
+    const doneKey = keyBase + path + "_done";
+
+    const lastReload = parseInt(sessionStorage.getItem(timeKey) || "0");
+    const hasReloaded = sessionStorage.getItem(doneKey) === "1";
     const now = Date.now();
 
-    if (!lastReload || (now - parseInt(lastReload)) > {$failsafe}) {
-        sessionStorage.setItem("jsReloadFixTime", now);
-        setTimeout(() => {
-            location.reload();
-        }, 50);
+    if (lastReload && (now - lastReload) > {$expiry}) {
+        sessionStorage.removeItem(timeKey);
+        sessionStorage.removeItem(doneKey);
+    }
+
+    const freshReload = !sessionStorage.getItem(doneKey);
+    if (freshReload && (now - lastReload) > {$failsafe}) {
+        sessionStorage.setItem(timeKey, now);
+        sessionStorage.setItem(doneKey, "1");
+        setTimeout(() => location.reload(), 50);
     }
 })();
 </script>
